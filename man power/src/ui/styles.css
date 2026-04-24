@@ -1,0 +1,27 @@
+/**
+ * Shadow DOM Styles for Magic Wand UI
+ * Glassmorphism design with animations
+ */
+
+/* Ensure host element doesn't interfere with layout */
+ai-refiner-wand {
+  --primary-color: #6366f1;
+  --primary-hover: #4f46e5;
+  --success-color: #10b981;
+  --error-color: #ef4444;
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-backdrop: blur(10px);
+
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Prevent content script styles from leaking into Shadow DOM */
+ai-refiner-wand * {
+  all: revert;
+}
+
+ai-refiner-wand ::-webkit-scrollbar {
+  display: none;
+}

@@ -1,0 +1,433 @@
+/**
+ * Magic Wand Custom Element
+ * Shadow DOM isolated UI with glassmorphism styling
+ * FULLY CSP-COMPLIANT: Inline SVG, embedded styles, max z-index (2147483647)
+ */
+
+class MagicWandElement extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.isRefining = false;
+    this.handler = null;
+  }
+
+  connectedCallback() {
+    this.render();
+    this.setupEventListeners();
+  }
+
+  render() {
+    const template = document.createElement('template');
+    // Inline SVG magic wand icon - no external resources, CSP-compliant
+    const svgIcon = `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 21l9-18M12.586 3.414l8.828 8.828a2 2 0 010 2.828l-8.828 8.828a2 2 0 01-2.828 0l-8.828-8.828a2 2 0 010-2.828l8.828-8.828a2 2 0 012.828 0z" 
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <circle cx="18" cy="6" r="2" fill="currentColor" opacity="0.8"/>
+        <circle cx="16" cy="10" r="1.5" fill="currentColor" opacity="0.6"/>
+        <circle cx="20" cy="8" r="1.5" fill="currentColor" opacity="0.7"/>
+      </svg>
+    `;
+
+    template.innerHTML = `
+      <style>
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
+
+        :host {
+          --primary-color: #6366f1;
+          --primary-hover: #4f46e5;
+          --success-color: #10b981;
+          --error-color: #ef4444;
+          --glass-bg: rgba(99, 102, 241, 0.85);
+          --glass-border: rgba(255, 255, 255, 0.3);
+          
+          position: absolute !important;
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          z-index: 2147483647 !important;
+          width: 56px !important;
+          height: 56px !important;
+          top: 0 !important;
+          left: 0 !important;
+          pointer-events: auto !important;
+          all: revert !important;
+        }
+
+        .wand-container {
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          z-index: 2147483647 !important;
+          width: 100% !important;
+          height: 100% !important;
+        }
+
+        .wand-button {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: 56px !important;
+          height: 56px !important;
+          border-radius: 50% !important;
+          background: var(--glass-bg) !important;
+          border: 2px solid var(--glass-border) !important;
+          backdrop-filter: blur(10px) !important;
+          cursor: pointer !important;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          color: white !important;
+          font-weight: bold !important;
+          padding: 0 !important;
+          box-shadow: 0 10px 40px rgba(99, 102, 241, 0.3) !important;
+          position: relative !important;
+          overflow: visible !important;
+          background-color: rgba(99, 102, 241, 0.9) !important;
+          z-index: 2147483647 !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          margin: 0 !important;
+          appearance: none !important;
+          background-clip: padding-box !important;
+        }
+
+        .wand-button svg {
+          width: 28px !important;
+          height: 28px !important;
+          stroke-width: 2 !important;
+          color: white !important;
+          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)) !important;
+          z-index: 2147483647 !important;
+          display: block !important;
+        }
+
+        .wand-button:hover:not(.refining) {
+          background: var(--primary-color) !important;
+          color: white !important;
+          transform: scale(1.15) !important;
+          box-shadow: 0 15px 50px rgba(99, 102, 241, 0.5) !important;
+        }
+
+        .wand-button:active:not(.refining) {
+          transform: scale(0.95) !important;
+        }
+
+        .wand-button:focus {
+          outline: none !important;
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+        }
+
+        .wand-button.refining {
+          background: linear-gradient(135deg, var(--primary-color), #8b5cf6) !important;
+          color: white !important;
+          cursor: wait !important;
+          animation: pulse 1.5s ease-in-out infinite !important;
+          pointer-events: none !important;
+        }
+
+        .wand-button.success {
+          background: var(--success-color) !important;
+          color: white !important;
+          animation: successPulse 0.6s ease-out !important;
+        }
+
+        .wand-button.error {
+          background: var(--error-color) !important;
+          color: white !important;
+          animation: shake 0.5s ease-in-out !important;
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            box-shadow: 0 10px 40px rgba(99, 102, 241, 0.3) !important;
+          }
+          50% {
+            box-shadow: 0 10px 40px rgba(99, 102, 241, 0.8) !important;
+          }
+        }
+
+        @keyframes successPulse {
+          0% {
+            transform: scale(1.25) !important;
+            opacity: 1 !important;
+          }
+          100% {
+            transform: scale(1) !important;
+            opacity: 1 !important;
+          }
+        }
+
+        @keyframes shake {
+          0%, 100% { transform: translateX(0) !important; }
+          25% { transform: translateX(-6px) !important; }
+          75% { transform: translateX(6px) !important; }
+        }
+
+        .sparkle {
+          position: absolute !important;
+          width: 5px !important;
+          height: 5px !important;
+          background: white !important;
+          border-radius: 50% !important;
+          opacity: 0 !important;
+          animation: sparkleAnimation 1.5s ease-in-out !important;
+          pointer-events: none !important;
+          z-index: 2147483647 !important;
+          box-shadow: 0 0 3px rgba(255, 255, 255, 0.8) !important;
+        }
+
+        @keyframes sparkleAnimation {
+          0% {
+            opacity: 1 !important;
+            transform: translate(0, 0) scale(1) !important;
+          }
+          100% {
+            opacity: 0 !important;
+            transform: translate(var(--tx), var(--ty)) scale(0) !important;
+          }
+        }
+
+        .status-text {
+          font-size: 11px !important;
+          white-space: nowrap !important;
+          color: var(--primary-color) !important;
+          font-weight: 700 !important;
+          min-width: 70px !important;
+          text-align: center !important;
+          opacity: 0 !important;
+          animation: fadeIn 0.3s ease-in forwards !important;
+          position: absolute !important;
+          bottom: -28px !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          z-index: 2147483647 !important;
+          pointer-events: none !important;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .status-text.refining {
+          color: var(--primary-color) !important;
+        }
+
+        .status-text.success {
+          color: var(--success-color) !important;
+          font-weight: 800 !important;
+        }
+
+        .status-text.error {
+          color: var(--error-color) !important;
+          font-weight: 800 !important;
+        }
+
+        @keyframes fadeIn {
+          from { 
+            opacity: 0 !important;
+            transform: translateX(-50%) translateY(-5px) !important;
+          }
+          to { 
+            opacity: 1 !important;
+            transform: translateX(-50%) translateY(0) !important;
+          }
+        }
+
+        .tooltip {
+          position: absolute !important;
+          bottom: 68px !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          background: rgba(0, 0, 0, 0.95) !important;
+          color: white !important;
+          padding: 8px 14px !important;
+          border-radius: 8px !important;
+          font-size: 12px !important;
+          font-weight: 600 !important;
+          white-space: nowrap !important;
+          pointer-events: none !important;
+          opacity: 0 !important;
+          transition: opacity 0.2s ease !important;
+          z-index: 2147483646 !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .wand-button:hover .tooltip {
+          opacity: 1 !important;
+        }
+      </style>
+
+      <div class="wand-container">
+        <button class="wand-button" id="wand-btn" type="button" title="Refine with AI (Click to enhance your prompt)">
+          ${svgIcon}
+          <div class="tooltip">Refine with AI ✨</div>
+        </button>
+        <div class="status-text" id="status-text"></div>
+      </div>
+    `;
+
+    this.shadowRoot.appendChild(template.content.cloneNode(true));
+  }
+
+  setupEventListeners() {
+    const button = this.shadowRoot.querySelector('#wand-btn');
+    if (button) {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.handleRefineClick();
+      });
+      button.addEventListener('mouseenter', () => this.createSparkles());
+    }
+  }
+
+  handleRefineClick() {
+    if (this.isRefining) return;
+
+    const activeHandler = this.getActiveHandler();
+    if (!activeHandler) {
+      this.showError('Not ready');
+      return;
+    }
+
+    const rawText = activeHandler.getRawText();
+    if (!rawText.trim()) {
+      this.showError('Empty');
+      return;
+    }
+
+    this.isRefining = true;
+    this.updateStatus('Refining...', 'refining');
+
+    chrome.runtime.sendMessage(
+      {
+        action: 'refinePrompt',
+        text: rawText,
+        platform: this.getAttribute('platform'),
+      },
+      (response) => {
+        if (response && response.success) {
+          // Set the refined text
+          activeHandler.setRefinedText(response.refinedText);
+          
+          // Trigger input events to notify Gemini of the change
+          activeHandler.triggerInputEvent();
+          
+          // Show success feedback
+          this.showSuccess('Refined!');
+          
+          console.log('[AI Prompt Enhancer] Refinement applied and events triggered ✨');
+        } else {
+          this.showError(response?.error || 'Failed');
+          console.error('[AI Prompt Enhancer] Refinement failed:', response?.error);
+        }
+        this.isRefining = false;
+      }
+    );
+  }
+
+  getActiveHandler() {
+    const { platformHandlers } = window;
+    const platform = this.getAttribute('platform');
+
+    if (!platformHandlers) return null;
+
+    let HandlerClass;
+    switch (platform) {
+      case 'gemini':
+        HandlerClass = platformHandlers.GeminiHandler;
+        break;
+      case 'chatgpt':
+        HandlerClass = platformHandlers.ChatGPTHandler;
+        break;
+      case 'claude':
+        HandlerClass = platformHandlers.ClaudeHandler;
+        break;
+      default:
+        return null;
+    }
+
+    if (!this.handler || !(this.handler instanceof HandlerClass)) {
+      this.handler = new HandlerClass();
+    }
+
+    return this.handler;
+  }
+
+  updateStatus(text, className) {
+    const statusEl = this.shadowRoot?.querySelector('#status-text');
+    if (statusEl) {
+      statusEl.textContent = text;
+      statusEl.className = `status-text ${className}`;
+    }
+  }
+
+  showSuccess(message = 'Refined!') {
+    const button = this.shadowRoot?.querySelector('#wand-btn');
+    if (button) {
+      button.classList.add('success');
+      this.updateStatus(message, 'success');
+
+      setTimeout(() => {
+        button.classList.remove('success');
+        this.updateStatus('', '');
+      }, 2000);
+    }
+  }
+
+  showError(message) {
+    const button = this.shadowRoot?.querySelector('#wand-btn');
+    if (button) {
+      button.classList.add('error');
+      this.updateStatus(message, 'error');
+
+      setTimeout(() => {
+        button.classList.remove('error');
+        this.updateStatus('', '');
+      }, 3000);
+    }
+  }
+
+  createSparkles() {
+    const button = this.shadowRoot?.querySelector('#wand-btn');
+    if (!button) return;
+
+    for (let i = 0; i < 6; i++) {
+      const sparkle = document.createElement('div');
+      sparkle.className = 'sparkle';
+      const angle = (i / 6) * Math.PI * 2;
+      const distance = 40;
+      const tx = Math.cos(angle) * distance;
+      const ty = Math.sin(angle) * distance;
+      sparkle.style.setProperty('--tx', `${tx}px`);
+      sparkle.style.setProperty('--ty', `${ty}px`);
+      sparkle.style.left = '50%';
+      sparkle.style.top = '50%';
+      button.appendChild(sparkle);
+
+      setTimeout(() => sparkle.remove(), 1500);
+    }
+  }
+}
+
+// Register custom element (bulletproof registration with max safety)
+try {
+  if (typeof window !== 'undefined' && 
+      window.customElements && 
+      typeof window.customElements.get === 'function') {
+    
+    if (!window.customElements.get('ai-refiner-wand')) {
+      window.customElements.define('ai-refiner-wand', MagicWandElement);
+      console.log('[AI Prompt Enhancer] Magic Wand element registered (CSP-compliant, inline SVG, z-index: 2147483647)');
+    }
+  }
+} catch (error) {
+  console.error('[AI Prompt Enhancer] Failed to register Magic Wand element:', error?.message);
+}
