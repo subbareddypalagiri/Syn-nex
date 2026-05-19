@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # 🚀 Syn-Nex: Real-Time Prompt Optimization Middleware
+=======
+# 🚀 Syn-Next: Real-Time Prompt Optimization Middleware
+>>>>>>> 787a146 (Move demo video to assets/ and reference in README)
 
 Syn-Next is a context-aware browser extension and middleware layer designed to supercharge user prompts in real-time. By intercepting raw, standard queries within mainstream AI chat interfaces, Syn-Next automatically upgrades them into high-fidelity, structurally optimized instructions with a single click of its signature **Wand UI Element**.
 
@@ -76,7 +80,12 @@ Syn-Next isn't just a UX tool; it's an optimization engine designed to deliver:
 ---
 
 ## 👨‍💻 Developed By
+<<<<<<< HEAD
 
 **[Nee Full Name]** *Full-Stack / AI Tooling Developer* * 💼 LinkedIn: [Nee LinkedIn URL]  
 * 🐙 GitHub: [Nee GitHub Profile URL]  
 * ✉️ Email: [Nee Email Address]
+=======
+ name :palagiri subbareddy
+ email : subbareddy123sub@gmail.com
+>>>>>>> 787a146 (Move demo video to assets/ and reference in README)
