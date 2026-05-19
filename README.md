@@ -1,4 +1,4 @@
-# 🚀 Syn-Next: Real-Time Prompt Optimization Middleware
+# 🚀 Syn-Nex: Real-Time Prompt Optimization Middleware
 
 Syn-Next is a context-aware browser extension and middleware layer designed to supercharge user prompts in real-time. By intercepting raw, standard queries within mainstream AI chat interfaces, Syn-Next automatically upgrades them into high-fidelity, structurally optimized instructions with a single click of its signature **Wand UI Element**.
 
